@@ -42,7 +42,7 @@ def play(text, start_played_time, num, fps):
 # 获取缩放大小
 def get_size(shape):
     tmp = shape[1]/FLAGS.video_scale
-    size = (shape[1]/tmp, shape[0]/tmp)
+    size = (int(shape[1]/tmp), int(shape[0]/tmp))
     return size
 
 def run():

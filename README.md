@@ -4,7 +4,8 @@
 
 # 说明
 python编写的实时字符动画播放器，实时解码并转换为字符，同时自带音频播放（需要安装ffmpeg，如果使用音频播放，在播放目录下会生成一个临时文件，正常退出时会自动删除）  
-BadApple.mp4:[点击此处](http://odxw2uear.bkt.clouddn.com/BadApple.mp4)
+BadApple.mp4:[点击此处](http://odxw2uear.bkt.clouddn.com/BadApple.mp4)  
+仅测试了python3.6的运行情况，其他的python3.+版本有问题的话，请发issue
 
 # 更新记录
 [点击此处](https://github.com/yp05327/PythonCharacterVideoPlayer/blob/master/update.md)
@@ -14,7 +15,7 @@ BadApple.mp4:[点击此处](http://odxw2uear.bkt.clouddn.com/BadApple.mp4)
 
 ```
 python2.7
-python3.+(未测试)
+python3.+
 ```
 
 安装依赖库，使用pip，Linux、Mac非root需要添加sudo
@@ -22,6 +23,8 @@ python3.+(未测试)
 ```shell
 pip install -r requirements.txt
 ```
+
+ffmpeg的安装请自行查找
 
 # 使用
 运行
