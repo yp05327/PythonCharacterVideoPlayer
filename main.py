@@ -9,7 +9,10 @@ from pydub import AudioSegment
 # 将灰度值转为字符
 def get_char(gray_number):
     if FLAGS.ascii_mode:
-        return chr(int(93.0/256*gray_number)) + ' '
+        # 优化过的ascii显示列表
+        ascii_char = list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
+        ascii = ascii_char[int(len(ascii_char)*1.0/256*gray_number)]
+        return ascii + ascii
     else:
         if gray_number > 100:
             return FLAGS.zifu + ' '
