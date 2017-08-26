@@ -3,9 +3,9 @@
 [![Licence](https://img.shields.io/badge/licence-MIT-blue.svg)](https://github.com/yp05327/PythonCharacterVideoPlayer/LICENSE) [![Python](https://img.shields.io/badge/python-2.7%2C3.+-blue.svg)](https://github.com/yp05327/PythonCharacterVideoPlayer#) 
 
 # 说明
-python编写的实时字符动画播放器，实时解码并转换为字符，同时自带音频播放（需要安装ffmpeg，如果使用音频播放，在播放目录下会生成一个临时文件，正常退出时会自动删除）  
+python编写的实时字符动画播放器，视频部分实时解码并转换为字符，同时自带音频播放（解码由python标准库wave实现，但由于python效率问题，无法实现python同步播放，还是需要c++库来进行播放，需要安装ffmpeg（格式转换）、pyaudio（python库）、portaudio（c++音频api），如果使用音频播放，在播放目录下会生成一个音频临时文件，正常退出时会自动删除）  
 BadApple.mp4:[点击此处](http://odxw2uear.bkt.clouddn.com/BadApple.mp4)  
-仅测试了python3.6的运行情况，其他的python3.+版本有问题的话，请发issue
+对于python3.+版本，仅测试了python3.6的运行情况，其他的python3.+版本有问题的话，请发issue
 
 # 更新记录
 [点击此处](https://github.com/yp05327/PythonCharacterVideoPlayer/blob/master/update.md)
@@ -24,7 +24,12 @@ python3.+
 pip install -r requirements.txt
 ```
 
-ffmpeg的安装请自行查找
+ffmpeg、portaudio的安装请自行查找  
+
+pyaudio安装（需要已经安装portaudio）：
+```shell
+pip install pyaudio
+```
 
 # 使用
 运行

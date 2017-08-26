@@ -2,19 +2,19 @@
 import cv2
 import time
 import os
-import pygame
 import argparse
 from pydub import AudioSegment
+from threadpool import *
 
-# 将灰度值转为字符
-def get_char(gray_number):
+# 将RGB转为字符
+def get_char(color_point):
     if FLAGS.ascii_mode:
         # 优化过的ascii显示列表
         ascii_char = list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
-        ascii = ascii_char[int(len(ascii_char)*1.0/256*gray_number)]
+        ascii = ascii_char[int(len(ascii_char)*1.0/256*color_point)]
         return ascii + ascii
     else:
-        if gray_number > 100:
+        if color_point > 100:
             return FLAGS.zifu + ' '
         else:
             return '  '
@@ -31,16 +31,63 @@ def img_to_char(image, size):
     return text
 
 # 播放一帧
-def play(text, start_played_time, num, fps):
+def play(video, start_played_time,fps):
+    num = 0
+    while (video.isOpened()):
+        ret, frame = video.read()
+        if frame is None:
+            break
+
+        size = get_size(frame.shape)
+        image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        text = img_to_char(image, size)
+
+        play_frame(text, start_played_time, num, fps)
+
+        num += 1
+
+def play_frame(text, start_played_time, num, fps):
     now_time = time.time()
 
     # 帧率控制
-    if now_time - start_played_time - num*1.0/fps < 0:
-        time.sleep(num*1.0/fps - (now_time - start_played_time))
+    if now_time - start_played_time - num * 1.0 / fps < 0:
+        time.sleep(num * 1.0 / fps - (now_time - start_played_time))
 
     os.system('clear')
     total_time = time.time() - start_played_time
-    print(text + '原视频帧率：%f, 当前帧：%d，播放时长：%f，帧率：%f' % (fps, num, total_time, num*1.0/total_time))
+    print(text + '原视频帧率：%f, 当前帧：%d，播放时长：%f，帧率：%f' % (fps, num, total_time, num * 1.0 / total_time))
+
+
+def play_audio():
+    import wave
+    import pyaudio
+    # wav文件读取
+    f = wave.open('Audio_tmp.wav', 'rb')
+    params = f.getparams()
+    nchannels, sampwidth, framerate, nframes = params[:4]
+    # instantiate PyAudio
+    p = pyaudio.PyAudio()
+    # define stream chunk
+    chunk = 1024
+    # 打开声音输出流
+    stream = p.open(format=p.get_format_from_width(sampwidth),
+                    channels=nchannels,
+                    rate=framerate,
+                    output=True)
+
+    # 写声音输出流到声卡进行播放
+    data = f.readframes(chunk)
+    i = 1
+    while True:
+        data = f.readframes(chunk)
+        if data == b'': break
+        stream.write(data)
+    f.close()
+    # stop stream
+    stream.stop_stream()
+    stream.close()
+    # close PyAudio
+    p.terminate()
 
 # 获取缩放大小
 def get_size(shape):
@@ -60,23 +107,20 @@ def run():
     else:
         fps = video.get(cv2.CAP_PROP_FPS)
 
-    num = 0
-    while (video.isOpened()):
-        ret, frame = video.read()
-        size = get_size(frame.shape)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        text = img_to_char(gray, size)
+    if start_played_time == 0:
+        start_played_time = time.time()
 
-        if start_played_time == 0:
-            start_played_time = time.time()
+    pool = ThreadPool(2)
+    reqs = makeRequests(play_audio, [([], None)])
+    reqs.append(makeRequests(play, [([video, start_played_time, fps],None)])[0])
 
-            pygame.mixer.init()
-            track = pygame.mixer.music.load("Audio_tmp.wav")
-            pygame.mixer.music.play()
+    for req in reqs:
+        pool.putRequest(req)
 
-        play(text, start_played_time, num, fps)
-
-        num += 1
+    try:
+        pool.wait()
+    except Exception:
+        pass
 
     video.release()
 
@@ -88,6 +132,7 @@ def main():
         print('请输入视频路径')
     else:
         if FLAGS.audio_mode:
+            print('正在转换音频，请稍候')
             AudioSegment.from_file(FLAGS.video_dir, 'mp4').export('Audio_tmp.wav', format='wav')
 
         run()
@@ -115,7 +160,7 @@ if __name__ == "__main__":
         '--audio_mode',
         type=bool,
         default=False,
-        help='是否播放音频，需要pydub和ffmpeg支持'
+        help='是否播放音频，需要ffmpeg、pyaudio、portaudio支持'
     )
     parser.add_argument(
         '--zifu',
