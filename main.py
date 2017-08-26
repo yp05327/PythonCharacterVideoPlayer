@@ -95,8 +95,7 @@ def get_size(shape):
     size = (int(shape[1]/tmp), int(shape[0]/tmp))
     return size
 
-def run():
-    video = cv2.VideoCapture(FLAGS.video_dir)
+def run(video):
     start_played_time = 0
 
     # Find OpenCV version
@@ -131,14 +130,29 @@ def main():
     if FLAGS.video_dir == '':
         print('请输入视频路径')
     else:
+        # 检测格式是否支持
+        video = cv2.VideoCapture(FLAGS.video_dir)
+
+        if not video.isOpened():
+            print('所选择视频格式不支持，正在转换视频格式，请稍候')
+            comm = 'ffmpeg -i {0} -strict -2 {1}'.format(FLAGS.video_dir, 'Video_tmp.mp4')
+            os.system(comm)
+            FLAGS.video_dir = 'Video_tmp.mp4'
+            print('转换视频格式完毕')
+            video = cv2.VideoCapture(FLAGS.video_dir)
+
         if FLAGS.audio_mode:
             print('正在转换音频，请稍候')
-            AudioSegment.from_file(FLAGS.video_dir, 'mp4').export('Audio_tmp.wav', format='wav')
+            geshi = os.path.splitext(FLAGS.video_dir)[1][1:]
+            AudioSegment.from_file(FLAGS.video_dir, geshi).export('Audio_tmp.wav', format='wav')
+            print('转换音频完毕，开始播放')
 
-        run()
+        run(video)
 
         if os.path.isfile('Audio_tmp.mp3'):
             os.remove('Audio_tmp.mp3')
+        if os.path.isfile('Video_tmp.mp4'):
+            os.remove('Video_tmp.mp4')
 
 
 
