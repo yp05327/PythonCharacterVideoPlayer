@@ -129,8 +129,8 @@ def run(video):
     video.release()
 
 def main():
-    if os.path.isfile('Audio_tmp.mp3'):
-        os.remove('Audio_tmp.mp3')
+    if os.path.isfile('Audio_tmp.wav'):
+        os.remove('Audio_tmp.wav')
 
     if FLAGS.video_dir == '':
         print('请输入视频路径')
@@ -161,8 +161,8 @@ def main():
 
         run(video)
 
-        if os.path.isfile('Audio_tmp.mp3'):
-            os.remove('Audio_tmp.mp3')
+        if os.path.isfile('Audio_tmp.wav'):
+            os.remove('Audio_tmp.wav')
         if os.path.isfile('Video_tmp.mp4'):
             os.remove('Video_tmp.mp4')
 
