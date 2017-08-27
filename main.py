@@ -2,11 +2,12 @@
 import cv2
 import time
 import os
+import sys
 import argparse
 from pydub import AudioSegment
 from threadpool import *
 
-# 将RGB转为字符
+# 将色点转为字符
 def get_char(color_point):
     if FLAGS.ascii_mode:
         # 优化过的ascii显示列表
@@ -50,12 +51,16 @@ def play_frame(text, start_played_time, num, fps):
     now_time = time.time()
 
     # 帧率控制
-    if now_time - start_played_time - num * 1.0 / fps < 0:
-        time.sleep(num * 1.0 / fps - (now_time - start_played_time))
+    delta_time = now_time - start_played_time - num * 1.0 / fps
+    if delta_time < 0:
+        time.sleep(-delta_time)
 
-    os.system('clear')
     total_time = time.time() - start_played_time
-    print(text + '原视频帧率：%f, 当前帧：%d，播放时长：%f，帧率：%f' % (fps, num, total_time, num * 1.0 / total_time))
+    text = text + '原视频帧率：%f, 当前帧：%d，播放时长：%f，帧率：%f, delta_time:%f\n\r' % (fps, num, total_time, num * 1.0 / total_time,delta_time)
+    #os.system('clear')
+    #print(text)
+    sys.stdout.write(text)
+    sys.stdout.flush()
 
 
 def play_audio():
@@ -130,16 +135,23 @@ def main():
     if FLAGS.video_dir == '':
         print('请输入视频路径')
     else:
-        # 检测格式是否支持
+        # 检测视频格式是否支持
         video = cv2.VideoCapture(FLAGS.video_dir)
 
         if not video.isOpened():
-            print('所选择视频格式不支持，正在转换视频格式，请稍候')
-            comm = 'ffmpeg -i {0} -strict -2 {1}'.format(FLAGS.video_dir, 'Video_tmp.mp4')
-            os.system(comm)
-            FLAGS.video_dir = 'Video_tmp.mp4'
-            print('转换视频格式完毕')
-            video = cv2.VideoCapture(FLAGS.video_dir)
+            music_file = raw_input('无法读取视频信息，是否转换文件(y/N):')
+            if music_file == 'y' or music_file == 'Y':
+                print('正在转换视频格式，请稍候')
+                comm = 'ffmpeg -i {0} -strict -2 {1}'.format(FLAGS.video_dir, 'Video_tmp.mp4')
+                os.system(comm)
+                FLAGS.video_dir = 'Video_tmp.mp4'
+                print('转换视频格式完毕')
+                video = cv2.VideoCapture(FLAGS.video_dir)
+            elif music_file == 'n' or music_file == 'N':
+                print('无法读取视频信息，仅播放音频')
+            else:
+                print('输入错误')
+                return
 
         if FLAGS.audio_mode:
             print('正在转换音频，请稍候')
