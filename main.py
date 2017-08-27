@@ -8,13 +8,14 @@ from pydub import AudioSegment
 from threadpool import *
 
 start_played_time = 0
+fps = 0
 
 # 将色点转为字符
 def get_char(color_point):
     if FLAGS.ascii_mode:
         # 优化过的ascii显示列表
         ascii_char = list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
-        ascii = ascii_char[int(len(ascii_char)*1.0/256*color_point)]
+        ascii = ascii_char[int(0.2734375*color_point)]
         return ascii + ascii
     else:
         if color_point > 100:
@@ -26,12 +27,15 @@ def get_char(color_point):
 def img_to_char(image, size):
     image = cv2.resize(image, size)
     text = ''
+    for i in xrange(size[0]):
+        text += '\n'
+    start = time.time()
     for i in range(image.shape[0]):
         for j in range(image.shape[1]):
             text += get_char(image[i, j])
         text += '\n'
 
-    return text
+    return text + '字符转化时间：%f' % (start - time.time())
 
 # 播放一帧
 def play(video):
@@ -65,10 +69,7 @@ def play_frame(text, num):
 
     total_time = time.time() - start_played_time
     text = text + '原视频帧率：%f, 当前帧：%d，播放时长：%f，帧率：%f, delta_time:%f\n\r' % (fps, num, total_time, num * 1.0 / total_time,delta_time)
-    os.system('clear')
     print(text)
-    #sys.stdout.write(text)
-    #sys.stdout.flush()
 
 
 def play_audio():
@@ -175,7 +176,13 @@ def main():
         if os.path.isfile('Video_tmp.mp4'):
             os.remove('Video_tmp.mp4')
 
-
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -187,13 +194,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--ascii_mode',
-        type=bool,
+        type=str2bool,
         default=False,
         help='采用灰度转ascii码模式'
     )
     parser.add_argument(
         '--audio_mode',
-        type=bool,
+        type=str2bool,
         default=False,
         help='是否播放音频，需要ffmpeg、pyaudio、portaudio支持'
     )
