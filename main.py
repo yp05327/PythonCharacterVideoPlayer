@@ -7,6 +7,8 @@ import argparse
 from pydub import AudioSegment
 from threadpool import *
 
+start_played_time = 0
+
 # 将色点转为字符
 def get_char(color_point):
     if FLAGS.ascii_mode:
@@ -32,7 +34,10 @@ def img_to_char(image, size):
     return text
 
 # 播放一帧
-def play(video, start_played_time,fps):
+def play(video):
+    global start_played_time
+    global fps
+
     num = 0
     while (video.isOpened()):
         ret, frame = video.read()
@@ -43,11 +48,14 @@ def play(video, start_played_time,fps):
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         text = img_to_char(image, size)
 
-        play_frame(text, start_played_time, num, fps)
+        play_frame(text, num)
 
         num += 1
 
-def play_frame(text, start_played_time, num, fps):
+def play_frame(text, num):
+    global start_played_time
+    global fps
+
     now_time = time.time()
 
     # 帧率控制
@@ -57,10 +65,10 @@ def play_frame(text, start_played_time, num, fps):
 
     total_time = time.time() - start_played_time
     text = text + '原视频帧率：%f, 当前帧：%d，播放时长：%f，帧率：%f, delta_time:%f\n\r' % (fps, num, total_time, num * 1.0 / total_time,delta_time)
-    #os.system('clear')
-    #print(text)
-    sys.stdout.write(text)
-    sys.stdout.flush()
+    os.system('clear')
+    print(text)
+    #sys.stdout.write(text)
+    #sys.stdout.flush()
 
 
 def play_audio():
@@ -101,7 +109,8 @@ def get_size(shape):
     return size
 
 def run(video):
-    start_played_time = 0
+    global fps
+    global start_played_time
 
     # Find OpenCV version
     (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
@@ -116,7 +125,7 @@ def run(video):
 
     pool = ThreadPool(2)
     reqs = makeRequests(play_audio, [([], None)])
-    reqs.append(makeRequests(play, [([video, start_played_time, fps],None)])[0])
+    reqs.append(makeRequests(play, [([video],None)])[0])
 
     for req in reqs:
         pool.putRequest(req)
